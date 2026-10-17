@@ -30,8 +30,18 @@ unset GITHUB_REPOSITORY T3CODE_DESKTOP_UPDATE_REPOSITORY GH_TOKEN GITHUB_TOKEN \
   GITLAB_TOKEN KEYGEN_TOKEN BITBUCKET_TOKEN BUILD_NUMBER VITE_HTTP_URL VITE_WS_URL \
   CSC_LINK CSC_NAME
 
+# The version stamp rewrites these; restore the exact files, uncommitted edits included.
 release_files=(apps/server/package.json apps/desktop/package.json apps/web/package.json packages/contracts/package.json)
-trap 'git checkout --quiet -- "${release_files[@]}"' EXIT
+backup_dir="$(mktemp -d)"
+for file in "${release_files[@]}"; do
+  mkdir -p "$backup_dir/$(dirname "$file")"
+  cp "$file" "$backup_dir/$file"
+done
+restore_release_files() {
+  for file in "${release_files[@]}"; do cp "$backup_dir/$file" "$file"; done
+  rm -rf "$backup_dir"
+}
+trap restore_release_files EXIT
 node scripts/update-release-package-versions.ts "$version"
 
 vp run --no-cache --filter @t3tools/desktop --filter t3 build

@@ -11,14 +11,17 @@ const NS_WINDOW_BELOW = -1;
 const NS_GLASS_EFFECT_VIEW_STYLE_REGULAR = 0;
 const GLASS_TINT_ALPHA = 0.7;
 
-export const MAC_LIQUID_GLASS_WINDOW_OPTIONS = {
-  transparent: true,
-  backgroundColor: "#00000000",
-} as const;
+export const MAC_LIQUID_GLASS_WINDOW_OPTIONS = { transparent: true } as const;
+
+// Light mode paints an opaque page over the glass; matching official's white base
+// keeps reloads and renderer crashes from flashing the dark glass.
+export function getMacLiquidGlassBackgroundColor(shouldUseDarkColors: boolean): string {
+  return shouldUseDarkColors ? "#00000000" : "#ffffff";
+}
 
 export type MacLiquidGlassResult =
   | { readonly material: "glass" }
-  | { readonly material: "vibrancy"; readonly cause: unknown };
+  | { readonly material: "vibrancy" | "none"; readonly cause: unknown };
 
 // The slice of AppKit used here; objc-js resolves selectors dynamically and is untyped.
 interface NSObject {
@@ -49,7 +52,6 @@ interface Foundation {
 
 const liquidGlassWindows = new WeakSet<Electron.BrowserWindow>();
 
-// An opaque setBackgroundColor would paint over the glass, so appearance syncs skip these.
 export function isMacLiquidGlassWindow(window: Electron.BrowserWindow): boolean {
   return liquidGlassWindows.has(window);
 }
@@ -82,11 +84,17 @@ export async function applyMacLiquidGlass(
 ): Promise<MacLiquidGlassResult> {
   liquidGlassWindows.add(window);
   try {
-    insertGlassView(await import("objc-js"), window);
+    const objc = await import("objc-js");
+    if (window.isDestroyed()) return { material: "none", cause: "window destroyed" };
+    insertGlassView(objc, window);
     window.invalidateShadow();
     return { material: "glass" };
   } catch (cause) {
-    window.setVibrancy("under-window");
-    return { material: "vibrancy", cause };
+    try {
+      window.setVibrancy("under-window");
+      return { material: "vibrancy", cause };
+    } catch {
+      return { material: "none", cause };
+    }
   }
 }

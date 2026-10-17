@@ -260,9 +260,11 @@ function syncWindowAppearance(
       return;
     }
 
-    if (!MacLiquidGlass.isMacLiquidGlassWindow(window)) {
-      window.setBackgroundColor(getInitialWindowBackgroundColor(shouldUseDarkColors));
-    }
+    window.setBackgroundColor(
+      MacLiquidGlass.isMacLiquidGlassWindow(window)
+        ? MacLiquidGlass.getMacLiquidGlassBackgroundColor(shouldUseDarkColors)
+        : getInitialWindowBackgroundColor(shouldUseDarkColors),
+    );
     const { titleBarOverlay } = getWindowTitleBarOptions(shouldUseDarkColors, platform);
     if (typeof titleBarOverlay === "object") {
       window.setTitleBarOverlay(titleBarOverlay);
@@ -371,8 +373,12 @@ export const make = Effect.gen(function* () {
       show: false,
       autoHideMenuBar: true,
       ...(environment.platform === "darwin" ? { disableAutoHideCursor: true } : {}),
-      backgroundColor: getInitialWindowBackgroundColor(shouldUseDarkColors),
-      ...(environment.platform === "darwin" ? MacLiquidGlass.MAC_LIQUID_GLASS_WINDOW_OPTIONS : {}),
+      ...(environment.platform === "darwin"
+        ? {
+            ...MacLiquidGlass.MAC_LIQUID_GLASS_WINDOW_OPTIONS,
+            backgroundColor: MacLiquidGlass.getMacLiquidGlassBackgroundColor(shouldUseDarkColors),
+          }
+        : { backgroundColor: getInitialWindowBackgroundColor(shouldUseDarkColors) }),
       ...iconOption,
       title: environment.displayName,
       ...getWindowTitleBarOptions(shouldUseDarkColors, environment.platform),
@@ -398,8 +404,9 @@ export const make = Effect.gen(function* () {
     if (environment.platform === "darwin") {
       window.setAutoHideCursor(false);
       const liquidGlass = yield* Effect.promise(() => MacLiquidGlass.applyMacLiquidGlass(window));
-      if (liquidGlass.material === "vibrancy") {
-        yield* logWindowWarning("liquid glass unavailable; using vibrancy", {
+      if (liquidGlass.material !== "glass") {
+        yield* logWindowWarning("liquid glass unavailable", {
+          fallback: liquidGlass.material,
           cause: liquidGlass.cause,
         });
       }
