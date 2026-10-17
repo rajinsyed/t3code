@@ -9,7 +9,7 @@ const NS_VIEW_WIDTH_SIZABLE = 2;
 const NS_VIEW_HEIGHT_SIZABLE = 16;
 const NS_WINDOW_BELOW = -1;
 const NS_GLASS_EFFECT_VIEW_STYLE_REGULAR = 0;
-const GLASS_TINT_ALPHA = 0.6;
+const GLASS_TINT_ALPHA = 0.65;
 
 export const MAC_LIQUID_GLASS_WINDOW_OPTIONS = {
   transparent: true,

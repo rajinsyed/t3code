@@ -1,22 +1,40 @@
 /*
- * macOS desktop windows sit on native Liquid Glass (apps/desktop/src/window/MacLiquidGlass.ts).
- * In dark mode the canvas tokens go transparent so the glass shows through;
- * floating surfaces keep their own fill so text stays legible. Light mode and
- * every other client keep the opaque canvas. `data-liquid-glass` is set by the
- * boot script in index.html.
+ * macOS desktop windows sit on native, black-tinted Liquid Glass
+ * (apps/desktop/src/window/MacLiquidGlass.ts). In dark mode the canvas tokens go
+ * transparent so the glass shows through; anything that has to cover content
+ * keeps a real fill. Light mode and every other client keep the opaque canvas.
+ * `data-liquid-glass` is set by the boot script in index.html.
  *
  * Do not give `--background` a partial alpha: structural layers stack several
- * deep, so the tint would compound unevenly. Tint specific surfaces instead.
+ * deep, so the tint would compound unevenly. Tint single surfaces instead.
  */
 :root.dark[data-liquid-glass] {
   --background: transparent;
   --app-chrome-background: transparent;
   --toolbar-background: transparent;
-  --popover: rgb(26 26 29);
-  --code-background: rgb(0 0 0 / 28%);
-  /* The terminal canvas is opaque, so it needs a solid color. */
-  --terminal-background: rgb(17 17 19);
+  /* Stand-in for the canvas where official paints it to cover or punch out
+     something: knobs, badges, rings, overlays, captions. */
+  --glass-solid: rgb(12 12 14);
+  /* Bars and sheets that content scrolls under. */
+  --glass-frost: rgb(16 16 19 / 92%);
+  --glass-frost-filter: blur(16px) saturate(1.08);
+  --code-background: transparent;
+  --terminal-background: rgb(11 11 13);
   --surface-grain: none;
+}
+
+/* The default theme derives these from the canvas, which is now transparent.
+   Palettes ship their own opaque values, so only the default needs them. */
+:root.dark[data-liquid-glass]:is(:not([data-theme-id]), [data-theme-id=""]) {
+  --popover: rgb(26 26 29);
+  --surface-raised: rgb(17 17 19);
+  --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 75%, var(--color-white));
+}
+
+/* A palette keeps its identity as a tint on the glass. */
+:root.dark[data-liquid-glass][data-theme-id]:not([data-theme-id=""]) {
+  --glass-solid: var(--app-theme-canvas);
+  --terminal-background: var(--app-theme-terminal-background);
 }
 
 /* Beats the inline colors from the index.html boot script and syncBrowserChromeTheme. */
@@ -26,21 +44,139 @@
   background: transparent !important;
 }
 
-/* The navigation rail is a shade darker than the main column. */
+:root.dark[data-liquid-glass][data-theme-id]:not([data-theme-id=""]) body {
+  background: color-mix(in srgb, var(--app-theme-canvas) 40%, transparent) !important;
+}
+
+/* The navigation rail is a shade darker than the main column, as in official. */
 :root.dark[data-liquid-glass] [data-app-sidebar] {
   --background: transparent;
   --card: transparent;
-  --muted: rgb(255 255 255 / 3%);
-  --accent: rgb(255 255 255 / 8%);
-  --sidebar: rgb(0 0 0 / 24%);
+  --sidebar: rgb(0 0 0 / 30%);
   --sidebar-stage-fade: transparent;
 }
 
-/* The glass utilities read `--background`; give them a real fill to work with. */
+:root.dark[data-liquid-glass]:is(:not([data-theme-id]), [data-theme-id=""]) [data-app-sidebar] {
+  --muted: rgb(255 255 255 / 3%);
+  --accent: rgb(255 255 255 / 8%);
+}
+
+:root.dark[data-liquid-glass][data-theme-id]:not([data-theme-id=""]) [data-app-sidebar] {
+  --sidebar: color-mix(in srgb, var(--app-theme-sidebar) 55%, transparent);
+}
+
+/* The stage art fades into the glass instead of into the canvas color. */
+:root.dark[data-liquid-glass] [data-app-sidebar] .sidebar-stage-backdrop {
+  --stage-mask: linear-gradient(
+    to bottom,
+    black 0%,
+    black 28%,
+    rgb(0 0 0 / 90%) 40%,
+    rgb(0 0 0 / 70%) 52%,
+    rgb(0 0 0 / 34%) 64%,
+    rgb(0 0 0 / 10%) 76%,
+    transparent 90%
+  );
+  -webkit-mask-image: var(--stage-mask);
+  mask-image: var(--stage-mask);
+}
+
+/* The narrow-window sidebar is a sheet over the chat, outside [data-app-sidebar]. */
+:root.dark[data-liquid-glass] [data-slot="sidebar"][data-mobile="true"],
+:root.dark[data-liquid-glass] [data-slot="sheet-popup"] {
+  --sidebar: var(--glass-frost);
+  --popover: var(--glass-frost);
+  -webkit-backdrop-filter: blur(24px) saturate(1.1);
+  backdrop-filter: blur(24px) saturate(1.1);
+}
+
+/* Floating layers give nested `bg-background` parts a real color, as dialogs do. */
 :root.dark[data-liquid-glass] :is(.dialog-glass, .surface-glass, .alert-glass) {
   --background: rgb(20 20 23);
 }
 
-:root.dark[data-liquid-glass] .dialog-backdrop {
+:root.dark[data-liquid-glass] :is(.dropdown-glass, [data-slot="popover-popup"]) {
+  --background: var(--glass-solid);
+}
+
+:root.dark[data-liquid-glass] :is(.dialog-backdrop, [data-slot="sheet-backdrop"]) {
   --background: rgb(0 0 0);
+}
+
+/* Knobs, badges, cut-out rings and inverted text use the canvas color. */
+:root.dark[data-liquid-glass]
+  :is(
+    [data-slot="switch-thumb"],
+    .settings-slider,
+    .rounded-full.bg-background,
+    .ring-background,
+    .text-background,
+    .fill-background
+  ) {
+  --background: var(--glass-solid);
+}
+
+:root.dark[data-liquid-glass] [data-slot="empty-media"] {
+  --card: var(--glass-solid);
+}
+
+/* Anything positioned over other content keeps covering it. */
+:root.dark[data-liquid-glass] :is(.absolute, .fixed):is(.bg-background, [class*="bg-background/"]),
+:root.dark[data-liquid-glass] [data-chat-workspace-drop-overlay] [role="status"],
+:root.dark[data-liquid-glass] [class~="@container/pool"] [class~="bg-background/85"] {
+  --background: var(--glass-solid);
+}
+
+/* The floating browser player paints its card from --muted. */
+:root.dark[data-liquid-glass] [data-preview-mini-player] {
+  --background: var(--glass-solid);
+  --muted: var(--glass-solid);
+}
+
+/* Sticky headers that content scrolls under. Diff file headers live in a shadow
+   root and read --diffs-sticky-header-background (StyledDiffCodeView.tsx). */
+:root.dark[data-liquid-glass] :is(.sticky.bg-background, .sticky[class*="bg-background/"]),
+:root.dark[data-liquid-glass] [data-changed-files-header] {
+  --background: var(--glass-frost);
+  -webkit-backdrop-filter: var(--glass-frost-filter);
+  backdrop-filter: var(--glass-frost-filter);
+}
+
+:root.dark[data-liquid-glass] thead.sticky {
+  --card: var(--glass-frost);
+}
+
+:root.dark[data-liquid-glass] :is(.diff-render-surface, .file-preview-virtualizer) {
+  --diffs-sticky-header-background: var(--glass-frost);
+}
+
+/* Fades over clipped content mask it instead of painting the canvas color. */
+:root.dark[data-liquid-glass] [data-thread-find-fold]:has(> .bg-linear-to-t),
+:root.dark[data-liquid-glass] .relative.max-h-\[240px\].overflow-hidden:has(> .from-background) {
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 6rem), transparent);
+  mask-image: linear-gradient(to bottom, black calc(100% - 6rem), transparent);
+}
+
+:root.dark[data-liquid-glass] [data-thread-find-fold] > .bg-linear-to-t,
+:root.dark[data-liquid-glass] .relative.max-h-\[240px\].overflow-hidden > .from-background {
+  display: none;
+}
+
+/* One tint per code surface; the diff renderer stacks --code-background on
+   every nested layer, so it stays transparent. */
+:root.dark[data-liquid-glass] .chat-markdown-codeblock {
+  background-color: rgb(0 0 0 / 30%);
+}
+
+:root.dark[data-liquid-glass] [data-preview-panel-mode="inline"] {
+  background-color: rgb(0 0 0 / 16%);
+}
+
+:root.dark[data-liquid-glass] .bg-message [class~="bg-background/70"] {
+  background-color: rgb(0 0 0 / 22%);
+}
+
+/* The terminal canvas is opaque, so the whole drawer shares its color. */
+:root.dark[data-liquid-glass] [data-thread-terminal-drawer] {
+  --background: var(--terminal-background);
 }
