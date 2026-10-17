@@ -12,12 +12,16 @@
   --background: transparent;
   --app-chrome-background: transparent;
   --toolbar-background: transparent;
-  /* Stand-in for the canvas where official paints it to cover or punch out
-     something: knobs, badges, rings, overlays, captions. */
+  /* Stand-ins for the canvas where official paints it to cover or punch out
+     something: knobs, badges, rings, overlays, dialogs, sheets. */
   --glass-solid: rgb(12 12 14);
-  /* Bars and sheets that content scrolls under. */
+  --glass-dialog: rgb(20 20 23);
+  --glass-sheet: rgb(16 16 19);
+  --glass-scrim: rgb(0 0 0);
+  /* Bars that content scrolls under. */
   --glass-frost: rgb(16 16 19 / 96%);
   --glass-frost-filter: blur(16px) saturate(1.08);
+  --glass-opacity-setting: var(--glass-opacity);
   --code-background: transparent;
   --terminal-background: rgb(11 11 13);
   --surface-grain: none;
@@ -31,17 +35,25 @@
   --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 62%, var(--color-white));
 }
 
-/* A palette keeps its identity as a tint on the glass. */
+/* A palette keeps its identity as a tint on the glass and in its covers. */
 :root.dark[data-liquid-glass][data-theme-id]:not([data-theme-id=""]) {
   --glass-solid: var(--app-theme-canvas);
+  --glass-dialog: var(--app-theme-canvas);
+  --glass-sheet: var(--app-theme-surface-overlay);
+  --glass-scrim: var(--app-theme-canvas);
   --terminal-background: var(--app-theme-terminal-background);
 }
 
 /* Chromium skips backdrop-filter over a transparent window, so frosted
-   surfaces cannot blur what is behind them. Keep them dense enough to cover it
-   instead of honoring the Glass opacity setting. */
+   surfaces cannot blur what is behind them. The Glass opacity setting maps into
+   a dense range instead (40% -> 94%, 100% -> solid). */
 :root.dark[data-liquid-glass] body {
-  --glass-opacity: 94%;
+  --glass-opacity: calc(90% + var(--glass-opacity-setting) * 0.1);
+}
+
+/* Menus and popovers have no dimming backdrop under them. */
+:root.dark[data-liquid-glass] :is(.dropdown-glass, [data-slot="popover-popup"]) {
+  --glass-opacity: calc(96% + var(--glass-opacity-setting) * 0.04);
 }
 
 /* Beats the inline colors from the index.html boot script and syncBrowserChromeTheme. */
@@ -71,6 +83,8 @@
 :root.dark[data-liquid-glass]:is(:not([data-theme-id]), [data-theme-id=""]) [data-app-sidebar] {
   --muted: rgb(255 255 255 / 3%);
   --accent: rgb(255 255 255 / 8%);
+  /* Settled rows recede against the darker rail, as in official. */
+  --secondary-label: color-mix(in srgb, var(--color-neutral-500) 78%, var(--color-white));
 }
 
 :root.dark[data-liquid-glass][data-theme-id]:not([data-theme-id=""]) [data-app-sidebar] {
@@ -93,18 +107,17 @@
   mask-image: var(--stage-mask);
 }
 
-/* The narrow-window sidebar is a sheet over the chat, outside [data-app-sidebar]. */
+/* Sheets cover live content edge to edge and cannot blur it, so they stay solid.
+   The narrow-window sidebar is one of them, outside [data-app-sidebar]. */
 :root.dark[data-liquid-glass] [data-slot="sidebar"][data-mobile="true"],
 :root.dark[data-liquid-glass] [data-slot="sheet-popup"] {
-  --sidebar: rgb(16 16 19 / 97%);
-  --popover: rgb(16 16 19 / 97%);
-  -webkit-backdrop-filter: blur(24px) saturate(1.1);
-  backdrop-filter: blur(24px) saturate(1.1);
+  --sidebar: var(--glass-sheet);
+  --popover: var(--glass-sheet);
 }
 
 /* Floating layers give nested `bg-background` parts a real color, as dialogs do. */
 :root.dark[data-liquid-glass] :is(.dialog-glass, .surface-glass, .alert-glass) {
-  --background: rgb(20 20 23);
+  --background: var(--glass-dialog);
 }
 
 :root.dark[data-liquid-glass] :is(.dropdown-glass, [data-slot="popover-popup"]) {
@@ -112,19 +125,30 @@
 }
 
 :root.dark[data-liquid-glass] :is(.dialog-backdrop, [data-slot="sheet-backdrop"]) {
-  --background: rgb(0 0 0);
+  --background: var(--glass-scrim);
+}
+
+/* Clerk's sign-in and account UI is themed from --card. */
+:root.dark[data-liquid-glass]:is(:not([data-theme-id]), [data-theme-id=""])
+  :is([class^="cl-"], [class*=" cl-"]) {
+  --card: var(--glass-dialog);
 }
 
 /* Knobs, badges, cut-out rings and inverted text use the canvas color. */
 :root.dark[data-liquid-glass]
   :is(
     [data-slot="switch-thumb"],
+    [data-slot="checkbox"],
+    [data-slot="radio"],
     .settings-slider,
     .ring-background,
+    .border-background,
+    .border-card,
     .text-background,
     .fill-background
   ) {
   --background: var(--glass-solid);
+  --card: var(--glass-solid);
 }
 
 :root.dark[data-liquid-glass] [data-slot="empty-media"] {
@@ -133,8 +157,15 @@
 
 /* Anything positioned over other content keeps covering it. */
 :root.dark[data-liquid-glass] :is(.absolute, .fixed):is(.bg-background, [class*="bg-background/"]),
+:root.dark[data-liquid-glass] .pointer-events-none.absolute > [class~="bg-background/85"],
+:root.dark[data-liquid-glass]
+  :is([aria-label="Device controls"], [aria-label$="stands"], [aria-label="Android fold controls"])
+  [class*="bg-background/"],
 :root.dark[data-liquid-glass] [data-chat-workspace-drop-overlay] [role="status"],
-:root.dark[data-liquid-glass] [class~="@container/pool"] [class~="bg-background/85"] {
+:root.dark[data-liquid-glass] [class~="@container/pool"] [class~="bg-background/85"],
+:root.dark[data-liquid-glass]
+  [data-slot="dialog-popup"]
+  .overscroll-contain.rounded-lg.bg-background.shadow-2xl {
   --background: var(--glass-solid);
 }
 
@@ -142,6 +173,19 @@
 :root.dark[data-liquid-glass] [data-preview-mini-player] {
   --background: var(--glass-solid);
   --muted: var(--glass-solid);
+}
+
+/* Standalone pages (pairing, sign-in, errors): official hides the accent glows
+   under an opaque canvas, and the card is as dense as a dialog. */
+:root.dark[data-liquid-glass]
+  .min-h-screen.bg-background
+  > .pointer-events-none.absolute.inset-0.opacity-80 {
+  display: none;
+}
+
+:root.dark[data-liquid-glass] .min-h-screen.bg-background > section.rounded-2xl.backdrop-blur-md {
+  --card: var(--glass-dialog);
+  --background: var(--glass-solid);
 }
 
 /* Sticky headers frost only while content scrolls under them; at rest they
@@ -170,6 +214,10 @@
   }
 }
 
+:root.dark[data-liquid-glass] thead.sticky {
+  --card: transparent;
+}
+
 @container scroll-state(stuck: top) {
   :root.dark[data-liquid-glass] :is(.sticky.bg-background, .sticky[class*="bg-background/"]),
   :root.dark[data-liquid-glass] [data-changed-files-header] {
@@ -183,6 +231,7 @@
   }
 }
 
+/* Diff file headers live in a shadow root; StyledDiffCodeView.tsx reads this. */
 :root.dark[data-liquid-glass] :is(.diff-render-surface, .file-preview-virtualizer) {
   --diffs-sticky-header-background: var(--glass-frost);
 }
@@ -215,9 +264,19 @@
   background-color: rgb(0 0 0 / 30%);
 }
 
-:root.dark[data-liquid-glass] :is(.diff-render-surface, .file-preview-virtualizer),
+:root.dark[data-liquid-glass] :is(.diff-render-surface, .file-preview-virtualizer) {
+  background-color: rgb(0 0 0 / 36%);
+}
+
 :root.dark[data-liquid-glass] [data-slot="settings-row"] > .mt-1.mb-2.space-y-2 > div {
   background-color: rgb(0 0 0 / 24%);
+}
+
+/* The Changes panel's code tint starts right under its toolbar. */
+:root.dark[data-liquid-glass]
+  [data-preview-panel-mode]
+  .diff-render-surface:not([class~="@container"]) {
+  box-shadow: inset 0 1px var(--border);
 }
 
 /* Timeline markers hide the connector line; round so only the avatar shows. */

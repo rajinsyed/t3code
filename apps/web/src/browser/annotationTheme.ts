@@ -1,5 +1,7 @@
 import type { DesktopPreviewAnnotationTheme } from "@t3tools/contracts";
 
+import { readOpaqueCanvasColor } from "../lib/liquidGlass";
+
 const readVariable = (styles: CSSStyleDeclaration, name: string, fallback: string): string =>
   styles.getPropertyValue(name).trim() || fallback;
 
@@ -9,7 +11,7 @@ export function readPreviewAnnotationTheme(): DesktopPreviewAnnotationTheme {
   return {
     colorScheme: root.classList.contains("dark") ? "dark" : "light",
     radius: readVariable(styles, "--radius", "0.625rem"),
-    background: readVariable(styles, "--background", "white"),
+    background: readOpaqueCanvasColor() ?? readVariable(styles, "--background", "white"),
     foreground: readVariable(styles, "--contrast-foreground", "oklch(0.269 0 0)"),
     popover: readVariable(styles, "--popover", "white"),
     popoverForeground: readVariable(styles, "--contrast-popover-foreground", "oklch(0.269 0 0)"),

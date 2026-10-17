@@ -2,6 +2,7 @@ import DOMPurify from "dompurify";
 import type { Mermaid } from "mermaid";
 import { use, useState } from "react";
 
+import { readOpaqueCanvasColor } from "../../lib/liquidGlass";
 import { Button } from "../ui/button";
 
 type MermaidRenderResult =
@@ -149,7 +150,8 @@ function mermaidImageUrl(svg: string): string {
   }
   element.setAttribute("xmlns", "http://www.w3.org/2000/svg");
   element.style.maxWidth = "none";
-  element.style.backgroundColor = getComputedStyle(document.body).backgroundColor;
+  element.style.backgroundColor =
+    readOpaqueCanvasColor() ?? getComputedStyle(document.body).backgroundColor;
   if (expandedImageUrl) URL.revokeObjectURL(expandedImageUrl);
   expandedImageUrl = URL.createObjectURL(
     new Blob([new XMLSerializer().serializeToString(element)], { type: "image/svg+xml" }),

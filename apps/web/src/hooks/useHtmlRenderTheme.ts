@@ -2,6 +2,7 @@ import { HTML_RENDER_DEFAULT_FONTS, htmlRenderTheme } from "@t3tools/shared/html
 import { useSyncExternalStore } from "react";
 
 import { appearanceFontStack } from "../appearanceFonts";
+import { isLiquidGlassCanvas } from "../lib/liquidGlass";
 import {
   getStandardThemeColors,
   getThemeColorsForMode,
@@ -37,10 +38,13 @@ export function useHtmlRenderTheme() {
   );
   const sans = useClientSettings((settings) => settings.fontFamilySans);
   const mono = useClientSettings((settings) => settings.fontFamilyCode);
+  const hexColors = Object.fromEntries(
+    Object.entries(colors).map(([role, color]) => [role, themeColorToHex(color) ?? color]),
+  ) as typeof colors;
+  // Over Liquid Glass rendered pages sit on the glass like the thread around them.
+  const glass = resolvedTheme === "dark" && isLiquidGlassCanvas();
   return htmlRenderTheme(
-    Object.fromEntries(
-      Object.entries(colors).map(([role, color]) => [role, themeColorToHex(color) ?? color]),
-    ) as typeof colors,
+    glass ? { ...hexColors, canvas: "transparent", codeBackground: "rgb(0 0 0 / 30%)" } : hexColors,
     resolvedTheme,
     {
       sans: appearanceFontStack(sans, HTML_RENDER_DEFAULT_FONTS.sans),
