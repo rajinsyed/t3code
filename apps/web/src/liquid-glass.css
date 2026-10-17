@@ -37,6 +37,13 @@
   --terminal-background: var(--app-theme-terminal-background);
 }
 
+/* Chromium skips backdrop-filter over a transparent window, so frosted
+   surfaces cannot blur what is behind them. Keep them dense enough to cover it
+   instead of honoring the Glass opacity setting. */
+:root.dark[data-liquid-glass] body {
+  --glass-opacity: 94%;
+}
+
 /* Beats the inline colors from the index.html boot script and syncBrowserChromeTheme. */
 :root.dark[data-liquid-glass],
 :root.dark[data-liquid-glass] body,
