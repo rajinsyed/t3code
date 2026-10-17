@@ -1,0 +1,46 @@
+/*
+ * macOS desktop windows sit on native Liquid Glass (apps/desktop/src/window/MacLiquidGlass.ts).
+ * In dark mode the canvas tokens go transparent so the glass shows through;
+ * floating surfaces keep their own fill so text stays legible. Light mode and
+ * every other client keep the opaque canvas. `data-liquid-glass` is set by the
+ * boot script in index.html.
+ *
+ * Do not give `--background` a partial alpha: structural layers stack several
+ * deep, so the tint would compound unevenly. Tint specific surfaces instead.
+ */
+:root.dark[data-liquid-glass] {
+  --background: transparent;
+  --app-chrome-background: transparent;
+  --toolbar-background: transparent;
+  --popover: rgb(26 26 29);
+  --code-background: rgb(0 0 0 / 28%);
+  /* The terminal canvas is opaque, so it needs a solid color. */
+  --terminal-background: rgb(17 17 19);
+  --surface-grain: none;
+}
+
+/* Beats the inline colors from the index.html boot script and syncBrowserChromeTheme. */
+:root.dark[data-liquid-glass],
+:root.dark[data-liquid-glass] body,
+:root.dark[data-liquid-glass] #boot-shell {
+  background: transparent !important;
+}
+
+/* The navigation rail is a shade darker than the main column. */
+:root.dark[data-liquid-glass] [data-app-sidebar] {
+  --background: transparent;
+  --card: transparent;
+  --muted: rgb(255 255 255 / 3%);
+  --accent: rgb(255 255 255 / 8%);
+  --sidebar: rgb(0 0 0 / 24%);
+  --sidebar-stage-fade: transparent;
+}
+
+/* The glass utilities read `--background`; give them a real fill to work with. */
+:root.dark[data-liquid-glass] :is(.dialog-glass, .surface-glass, .alert-glass) {
+  --background: rgb(20 20 23);
+}
+
+:root.dark[data-liquid-glass] .dialog-backdrop {
+  --background: rgb(0 0 0);
+}

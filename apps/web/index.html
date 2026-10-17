@@ -216,6 +216,11 @@
           }
         };
 
+        // The macOS desktop window is native Liquid Glass; see src/liquid-glass.css.
+        if (window.desktopBridge?.getClientPlatform?.() === "darwin") {
+          document.documentElement.dataset.liquidGlass = "";
+        }
+
         try {
           const storedTheme = window.localStorage.getItem("t3code:theme");
           const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -435,6 +440,12 @@
       html[data-theme-selected="true"] #boot-shell {
         background: var(--boot-background);
         color: var(--boot-foreground);
+      }
+
+      html.dark[data-liquid-glass],
+      html.dark[data-liquid-glass] body,
+      html.dark[data-liquid-glass] #boot-shell {
+        background: transparent !important;
       }
 
       #boot-shell-card {
