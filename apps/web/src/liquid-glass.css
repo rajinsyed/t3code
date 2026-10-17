@@ -16,7 +16,7 @@
      something: knobs, badges, rings, overlays, captions. */
   --glass-solid: rgb(12 12 14);
   /* Bars and sheets that content scrolls under. */
-  --glass-frost: rgb(16 16 19 / 92%);
+  --glass-frost: rgb(16 16 19 / 96%);
   --glass-frost-filter: blur(16px) saturate(1.08);
   --code-background: transparent;
   --terminal-background: rgb(11 11 13);
@@ -28,7 +28,7 @@
 :root.dark[data-liquid-glass]:is(:not([data-theme-id]), [data-theme-id=""]) {
   --popover: rgb(26 26 29);
   --surface-raised: rgb(17 17 19);
-  --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 75%, var(--color-white));
+  --muted-foreground: color-mix(in srgb, var(--color-neutral-500) 62%, var(--color-white));
 }
 
 /* A palette keeps its identity as a tint on the glass. */
@@ -52,8 +52,13 @@
 :root.dark[data-liquid-glass] [data-app-sidebar] {
   --background: transparent;
   --card: transparent;
-  --sidebar: rgb(0 0 0 / 30%);
+  --sidebar: rgb(0 0 0 / 26%);
   --sidebar-stage-fade: transparent;
+}
+
+/* A row being dragged floats over its neighbours. */
+:root.dark[data-liquid-glass] [data-app-sidebar] .group\/sidebar-row.bg-sidebar {
+  --sidebar: var(--glass-solid);
 }
 
 :root.dark[data-liquid-glass]:is(:not([data-theme-id]), [data-theme-id=""]) [data-app-sidebar] {
@@ -84,8 +89,8 @@
 /* The narrow-window sidebar is a sheet over the chat, outside [data-app-sidebar]. */
 :root.dark[data-liquid-glass] [data-slot="sidebar"][data-mobile="true"],
 :root.dark[data-liquid-glass] [data-slot="sheet-popup"] {
-  --sidebar: var(--glass-frost);
-  --popover: var(--glass-frost);
+  --sidebar: rgb(16 16 19 / 97%);
+  --popover: rgb(16 16 19 / 97%);
   -webkit-backdrop-filter: blur(24px) saturate(1.1);
   backdrop-filter: blur(24px) saturate(1.1);
 }
@@ -108,7 +113,6 @@
   :is(
     [data-slot="switch-thumb"],
     .settings-slider,
-    .rounded-full.bg-background,
     .ring-background,
     .text-background,
     .fill-background
@@ -133,28 +137,64 @@
   --muted: var(--glass-solid);
 }
 
-/* Sticky headers that content scrolls under. Diff file headers live in a shadow
-   root and read --diffs-sticky-header-background (StyledDiffCodeView.tsx). */
+/* Sticky headers frost only while content scrolls under them; at rest they
+   stay as seamless as official. */
 :root.dark[data-liquid-glass] :is(.sticky.bg-background, .sticky[class*="bg-background/"]),
-:root.dark[data-liquid-glass] [data-changed-files-header] {
-  --background: var(--glass-frost);
-  -webkit-backdrop-filter: var(--glass-frost-filter);
-  backdrop-filter: var(--glass-frost-filter);
+:root.dark[data-liquid-glass] [data-changed-files-header],
+:root.dark[data-liquid-glass] thead.sticky {
+  container-type: scroll-state;
 }
 
-:root.dark[data-liquid-glass] thead.sticky {
-  --card: var(--glass-frost);
+:root.dark[data-liquid-glass] :is(.sticky.bg-background, .sticky[class*="bg-background/"]),
+:root.dark[data-liquid-glass] [data-changed-files-header] {
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    background: var(--glass-frost);
+    -webkit-backdrop-filter: var(--glass-frost-filter);
+    backdrop-filter: var(--glass-frost-filter);
+    opacity: 0;
+  }
+}
+
+@container scroll-state(stuck: top) {
+  :root.dark[data-liquid-glass] :is(.sticky.bg-background, .sticky[class*="bg-background/"]),
+  :root.dark[data-liquid-glass] [data-changed-files-header] {
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  :root.dark[data-liquid-glass] thead.sticky > tr > th {
+    background-color: var(--glass-frost);
+  }
 }
 
 :root.dark[data-liquid-glass] :is(.diff-render-surface, .file-preview-virtualizer) {
   --diffs-sticky-header-background: var(--glass-frost);
 }
 
+:root.dark[data-liquid-glass]
+  .diff-render-surface
+  diffs-container:has(> [slot="header-prefix"] [aria-expanded="false"]) {
+  --diffs-sticky-header-background: transparent;
+}
+
 /* Fades over clipped content mask it instead of painting the canvas color. */
-:root.dark[data-liquid-glass] [data-thread-find-fold]:has(> .bg-linear-to-t),
-:root.dark[data-liquid-glass] .relative.max-h-\[240px\].overflow-hidden:has(> .from-background) {
+:root.dark[data-liquid-glass] [data-thread-find-fold]:has(> .bg-linear-to-t) {
   -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 6rem), transparent);
   mask-image: linear-gradient(to bottom, black calc(100% - 6rem), transparent);
+}
+
+:root.dark[data-liquid-glass] .relative.max-h-\[240px\].overflow-hidden:has(> .from-background) {
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 2.5rem), transparent);
+  mask-image: linear-gradient(to bottom, black calc(100% - 2.5rem), transparent);
 }
 
 :root.dark[data-liquid-glass] [data-thread-find-fold] > .bg-linear-to-t,
@@ -168,8 +208,19 @@
   background-color: rgb(0 0 0 / 30%);
 }
 
-:root.dark[data-liquid-glass] [data-preview-panel-mode="inline"] {
-  background-color: rgb(0 0 0 / 16%);
+:root.dark[data-liquid-glass] :is(.diff-render-surface, .file-preview-virtualizer),
+:root.dark[data-liquid-glass] [data-slot="settings-row"] > .mt-1.mb-2.space-y-2 > div {
+  background-color: rgb(0 0 0 / 24%);
+}
+
+/* Timeline markers hide the connector line; round so only the avatar shows. */
+:root.dark[data-liquid-glass] .absolute.left-0.size-8.bg-background[class~="-translate-y-1/2"] {
+  border-radius: 9999px;
+}
+
+/* The file tree's fixed gray for ignored files vanishes on glass. */
+:root.dark[data-liquid-glass] file-tree-container {
+  --trees-git-ignored-color-override: rgb(255 255 255 / 30%);
 }
 
 :root.dark[data-liquid-glass] .bg-message [class~="bg-background/70"] {
