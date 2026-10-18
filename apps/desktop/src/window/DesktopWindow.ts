@@ -403,6 +403,15 @@ export const make = Effect.gen(function* () {
     yield* rendererHistory.register(window.webContents, { surface: "main" });
     if (environment.platform === "darwin") {
       window.setAutoHideCursor(false);
+      const savedClientSettings = yield* clientSettings.get.pipe(
+        Effect.orElseSucceed(() => Option.none()),
+      );
+      MacLiquidGlass.setMacLiquidGlassTint(
+        Option.match(savedClientSettings, {
+          onNone: () => DEFAULT_CLIENT_SETTINGS.liquidGlassTint,
+          onSome: (settings) => settings.liquidGlassTint,
+        }),
+      );
       const liquidGlass = yield* Effect.promise(() => MacLiquidGlass.applyMacLiquidGlass(window));
       if (liquidGlass.material !== "glass") {
         yield* logWindowWarning("liquid glass unavailable", {

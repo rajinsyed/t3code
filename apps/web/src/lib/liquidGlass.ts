@@ -1,6 +1,10 @@
 // The macOS desktop canvas is see-through over Liquid Glass (see ../liquid-glass.css).
 // Anything that leaves the window, such as exports or previewed pages, needs an
 // opaque stand-in for it.
+export function hasLiquidGlassWindow(): boolean {
+  return document.documentElement.hasAttribute("data-liquid-glass");
+}
+
 export function isLiquidGlassCanvas(): boolean {
   return document.documentElement.matches(".dark[data-liquid-glass]");
 }

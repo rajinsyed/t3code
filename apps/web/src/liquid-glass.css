@@ -16,12 +16,15 @@
      something: knobs, badges, rings, overlays, dialogs, sheets. */
   --glass-solid: rgb(12 12 14);
   --glass-dialog: rgb(20 20 23);
-  --glass-sheet: rgb(16 16 19);
+  --glass-sheet: rgb(16 16 19 / 72%);
   --glass-scrim: rgb(0 0 0);
   /* Bars that content scrolls under. */
-  --glass-frost: rgb(16 16 19 / 96%);
-  --glass-frost-filter: blur(16px) saturate(1.08);
-  --glass-opacity-setting: var(--glass-opacity);
+  --glass-frost: rgb(16 16 19 / 55%);
+  /* Chromium skips backdrop-filter: blur() over a transparent window, so frosted
+     surfaces use the SVG filters in index.html, which blur in-app content until it
+     is hidden and leave empty areas clear to the native glass. */
+  --glass-frost-filter: url(#t3-liquid-glass-frost);
+  --glass-scrim-filter: url(#t3-liquid-glass-scrim);
   --code-background: transparent;
   --terminal-background: rgb(11 11 13);
   --surface-grain: none;
@@ -39,21 +42,36 @@
 :root.dark[data-liquid-glass][data-theme-id]:not([data-theme-id=""]) {
   --glass-solid: var(--app-theme-canvas);
   --glass-dialog: var(--app-theme-canvas);
-  --glass-sheet: var(--app-theme-surface-overlay);
+  --glass-sheet: color-mix(in srgb, var(--app-theme-surface-overlay) 72%, transparent);
   --glass-scrim: var(--app-theme-canvas);
   --terminal-background: var(--app-theme-terminal-background);
 }
 
-/* Chromium skips backdrop-filter over a transparent window, so frosted
-   surfaces cannot blur what is behind them. The Glass opacity setting maps into
-   a dense range instead (40% -> 97%, 100% -> solid). */
-:root.dark[data-liquid-glass] body {
-  --glass-opacity: calc(95% + var(--glass-opacity-setting) * 0.05);
+/* Frosted surfaces: menus, popovers, toasts, dialogs, the composer and anything
+   else built on the glass utilities or Tailwind's backdrop-blur. */
+:root.dark[data-liquid-glass] :is(.surface-glass, .alert-glass, .dialog-glass, .dropdown-glass) {
+  -webkit-backdrop-filter: var(--glass-frost-filter);
+  backdrop-filter: var(--glass-frost-filter);
 }
 
-/* Menus and popovers have no dimming backdrop under them. */
-:root.dark[data-liquid-glass] :is(.dropdown-glass, [data-slot="popover-popup"]) {
-  --glass-opacity: calc(97% + var(--glass-opacity-setting) * 0.03);
+:root.dark[data-liquid-glass] [class*="backdrop-blur"],
+:root.dark[data-liquid-glass] [class*="backdrop-blur"]::before {
+  --tw-backdrop-blur: var(--glass-frost-filter);
+}
+
+/* A rim of light on the top edge, composed with the element's own shadows. */
+:root.dark[data-liquid-glass] .dropdown-glass {
+  --tw-inset-shadow: inset 0 1px rgb(255 255 255 / 7%);
+}
+
+/* Modal backdrops soften the app behind them instead of hiding it. */
+:root.dark[data-liquid-glass] .dialog-backdrop {
+  -webkit-backdrop-filter: var(--glass-scrim-filter);
+  backdrop-filter: var(--glass-scrim-filter);
+}
+
+:root.dark[data-liquid-glass] [data-slot="sheet-backdrop"] {
+  --tw-backdrop-blur: var(--glass-scrim-filter);
 }
 
 /* Beats the inline colors from the index.html boot script and syncBrowserChromeTheme. */
@@ -107,12 +125,14 @@
   mask-image: var(--stage-mask);
 }
 
-/* Sheets cover live content edge to edge and cannot blur it, so they stay solid.
-   The narrow-window sidebar is one of them, outside [data-app-sidebar]. */
+/* Sheets are frosted panes over live content. The narrow-window sidebar is one
+   of them, outside [data-app-sidebar]. */
 :root.dark[data-liquid-glass] [data-slot="sidebar"][data-mobile="true"],
 :root.dark[data-liquid-glass] [data-slot="sheet-popup"] {
   --sidebar: var(--glass-sheet);
   --popover: var(--glass-sheet);
+  -webkit-backdrop-filter: var(--glass-frost-filter);
+  backdrop-filter: var(--glass-frost-filter);
 }
 
 /* Floating layers give nested `bg-background` parts a real color, as dialogs do. */
@@ -191,7 +211,7 @@
 }
 
 :root.dark[data-liquid-glass] .min-h-screen.bg-background > section.rounded-2xl.backdrop-blur-md {
-  --card: var(--glass-dialog);
+  --card: rgb(20 20 23 / 72%);
   --background: var(--glass-solid);
 }
 
@@ -235,12 +255,15 @@
 
   :root.dark[data-liquid-glass] thead.sticky > tr > th {
     background-color: var(--glass-frost);
+    -webkit-backdrop-filter: var(--glass-frost-filter);
+    backdrop-filter: var(--glass-frost-filter);
   }
 }
 
-/* Diff file headers live in a shadow root; StyledDiffCodeView.tsx reads this. */
+/* Diff file headers live in a shadow root that the frost filter cannot reach;
+   StyledDiffCodeView.tsx reads this. */
 :root.dark[data-liquid-glass] :is(.diff-render-surface, .file-preview-virtualizer) {
-  --diffs-sticky-header-background: var(--glass-frost);
+  --diffs-sticky-header-background: rgb(16 16 19 / 96%);
 }
 
 :root.dark[data-liquid-glass]

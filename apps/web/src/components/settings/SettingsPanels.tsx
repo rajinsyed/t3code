@@ -32,6 +32,7 @@ import {
   MAX_APPEARANCE_CONTRAST,
   MAX_CODE_FONT_SIZE,
   MAX_GLASS_OPACITY,
+  MAX_LIQUID_GLASS_TINT,
   MAX_INTERFACE_FONT_SIZE,
   MAX_PANEL_ANIMATION_DURATION_MS,
   MAX_PROMPT_FONT_SIZE,
@@ -40,6 +41,7 @@ import {
   MIN_CODE_FONT_SIZE,
   MIN_APPEARANCE_CONTRAST,
   MIN_GLASS_OPACITY,
+  MIN_LIQUID_GLASS_TINT,
   MIN_INTERFACE_FONT_SIZE,
   MIN_PANEL_ANIMATION_DURATION_MS,
   MIN_PROMPT_FONT_SIZE,
@@ -170,6 +172,7 @@ import {
   useSettingsSearchTargetId,
 } from "./settingsLayout";
 import { searchableSetting } from "./settingsSearch";
+import { hasLiquidGlassWindow } from "../../lib/liquidGlass";
 import { ProjectFavicon } from "../ProjectFavicon";
 import { PanelAnimationsPreview } from "./PanelAnimationsPreview";
 
@@ -538,6 +541,9 @@ export function useSettingsRestore(onRestored?: () => void) {
       ? ["Contrast"]
       : []),
     ...(settings.glassOpacity !== DEFAULT_UNIFIED_SETTINGS.glassOpacity ? ["Glass opacity"] : []),
+    ...(settings.liquidGlassTint !== DEFAULT_UNIFIED_SETTINGS.liquidGlassTint
+      ? ["Liquid Glass tint"]
+      : []),
     ...(settings.diffColorScheme !== DEFAULT_UNIFIED_SETTINGS.diffColorScheme
       ? ["Diff colors"]
       : []),
@@ -733,6 +739,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       contextWindowMeterEnabled: DEFAULT_UNIFIED_SETTINGS.contextWindowMeterEnabled,
       environmentIdentificationMode: DEFAULT_UNIFIED_SETTINGS.environmentIdentificationMode,
       glassOpacity: DEFAULT_UNIFIED_SETTINGS.glassOpacity,
+      liquidGlassTint: DEFAULT_UNIFIED_SETTINGS.liquidGlassTint,
       panelAnimationDurationMs: DEFAULT_UNIFIED_SETTINGS.panelAnimationDurationMs,
       sidebarThreadPreviewCount: DEFAULT_UNIFIED_SETTINGS.sidebarThreadPreviewCount,
       sidebarProjectGroupingMode: DEFAULT_UNIFIED_SETTINGS.sidebarProjectGroupingMode,
@@ -1088,6 +1095,13 @@ export function AppearanceSettingsPanel() {
     "--settings-slider-progress": `${glassOpacityRatio * 100}%`,
     "--settings-slider-fill-offset": `${0.5 - glassOpacityRatio}rem`,
   } as CSSProperties;
+  const liquidGlassTintRatio =
+    (settings.liquidGlassTint - MIN_LIQUID_GLASS_TINT) /
+    (MAX_LIQUID_GLASS_TINT - MIN_LIQUID_GLASS_TINT);
+  const liquidGlassTintSliderStyle = {
+    "--settings-slider-progress": `${liquidGlassTintRatio * 100}%`,
+    "--settings-slider-fill-offset": `${0.5 - liquidGlassTintRatio}rem`,
+  } as CSSProperties;
   const appearanceContrastRatio =
     (settings.appearanceContrast - MIN_APPEARANCE_CONTRAST) /
     (MAX_APPEARANCE_CONTRAST - MIN_APPEARANCE_CONTRAST);
@@ -1217,6 +1231,54 @@ export function AppearanceSettingsPanel() {
             </div>
           }
         />
+
+        {hasLiquidGlassWindow() ? (
+          <SettingsRow
+            {...searchableSetting("setting-liquid-glass-tint")}
+            description="How dark the window's Liquid Glass is in dark mode."
+            resetAction={
+              settings.liquidGlassTint !== DEFAULT_UNIFIED_SETTINGS.liquidGlassTint ? (
+                <SettingResetButton
+                  label="Liquid Glass tint"
+                  onClick={() =>
+                    updateSettings({ liquidGlassTint: DEFAULT_UNIFIED_SETTINGS.liquidGlassTint })
+                  }
+                />
+              ) : null
+            }
+            control={
+              <div className="flex w-full items-center gap-3 sm:w-52">
+                <output
+                  className="min-w-12 rounded-md bg-muted px-2 py-1 text-center font-mono text-xs font-medium tabular-nums text-foreground"
+                  htmlFor="liquid-glass-tint"
+                >
+                  {settings.liquidGlassTint}%
+                </output>
+                <input
+                  aria-label="Liquid Glass tint"
+                  className="settings-slider min-w-0 flex-1"
+                  id="liquid-glass-tint"
+                  max={MAX_LIQUID_GLASS_TINT}
+                  min={MIN_LIQUID_GLASS_TINT}
+                  onChange={(event) => {
+                    const liquidGlassTint = Number(event.currentTarget.value);
+                    if (
+                      Number.isInteger(liquidGlassTint) &&
+                      liquidGlassTint >= MIN_LIQUID_GLASS_TINT &&
+                      liquidGlassTint <= MAX_LIQUID_GLASS_TINT
+                    ) {
+                      updateSettings({ liquidGlassTint });
+                    }
+                  }}
+                  step={5}
+                  style={liquidGlassTintSliderStyle}
+                  type="range"
+                  value={settings.liquidGlassTint}
+                />
+              </div>
+            }
+          />
+        ) : null}
 
         {showEnvironmentIdentification ? (
           <SettingsRow

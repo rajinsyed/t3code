@@ -227,6 +227,15 @@ export const SETTINGS_SEARCH_ITEMS = [
     searchTerms: ["transparent transparency solid menus dialogs composer"],
   },
   {
+    // Prefixed because the slider control already owns the `liquid-glass-tint` id.
+    id: "setting-liquid-glass-tint",
+    title: "Liquid Glass tint",
+    to: "/settings/appearance",
+    searchTerms: ["window background dark black transparent macos"],
+    desktopOnly: true,
+    macOnly: true,
+  },
+  {
     id: "diff-color-scheme",
     title: "Diff colors",
     to: "/settings/appearance",
