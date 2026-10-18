@@ -1587,6 +1587,8 @@ layer("GitHubPullRequestApi.layer", (it) => {
       mockedExecute.mockReturnValueOnce(
         Effect.succeed(output(listedPullRequests(3, 1, () => ({ isDraft: true })))),
       );
+      // The index does not know the repository, so the fallback widens.
+      mockedExecute.mockReturnValueOnce(Effect.succeed(emptySearch()));
       mockedExecute.mockReturnValueOnce(
         Effect.succeed(output(listedPullRequests(6, 1, (number) => ({ isDraft: number < 4 })))),
       );
@@ -2215,6 +2217,8 @@ layer("GitHubPullRequestApi.layer", (it) => {
       mockedExecute.mockReturnValueOnce(
         Effect.succeed(output(listedPullRequests(3, 1, unrelated))),
       );
+      // The index does not know the repository, so the fallback widens.
+      mockedExecute.mockReturnValueOnce(Effect.succeed(emptySearch()));
       mockedExecute.mockReturnValueOnce(
         Effect.succeed(
           output(
@@ -2238,7 +2242,8 @@ layer("GitHubPullRequestApi.layer", (it) => {
 
       expect(batch.items.map((item) => item.number)).toEqual([4]);
       expect(varsAt(1)["first"]).toBe(3);
-      expect(varsAt(2)["first"]).toBe(6);
+      expect(varsAt(2)["q"]).toBe("is:pr repo:acme/web");
+      expect(varsAt(3)["first"]).toBe(6);
       assert.isFalse(batch.truncated);
     }),
   );

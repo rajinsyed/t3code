@@ -1715,6 +1715,20 @@ export const make = Effect.gen(function* () {
           };
         });
       const stacks = input.host.toLowerCase() === "github.com";
+      // Any pull request at all in the repository's search proves the index covers it. A failed
+      // answer proves nothing, so the repository is then read as one the index may not cover.
+      const searchIndexes = client
+        .PullRequestSearch({
+          q: `is:pr repo:${input.repository.trim()}`,
+          first: 1,
+          stacks: false,
+          stats: false,
+        })
+        .pipe(
+          graphql(target),
+          Effect.map((result) => toPullRequestRows(result.search).rawCount > 0),
+          Effect.orElseSucceed(() => false),
+        );
       const read = (
         continues: boolean,
         requestedRows = input.limit + 1,
@@ -1755,16 +1769,7 @@ export const make = Effect.gen(function* () {
             const items = continues
               ? rawItems
               : rawItems.filter((item) => matchesUnsortedListing(item, input));
-            if (
-              !continues &&
-              items.length < input.limit &&
-              rawCount >= requestedRows &&
-              requestedRows < fallbackMaxRows
-            ) {
-              const nextRows = Math.min(requestedRows * 2, fallbackMaxRows);
-              if (nextRows > requestedRows) return read(false, nextRows);
-            }
-            return Effect.succeed({
+            const batch: GitHubPullRequestListBatch = {
               items: items.slice(0, input.limit),
               // One row over the page size is the probe for a next page, and it is
               // counted before decoding: a skipped malformed row must not end paging.
@@ -1774,7 +1779,25 @@ export const make = Effect.gen(function* () {
                   ? rawCount > input.limit
                   : items.length > input.limit || rawCount >= requestedRows),
               continues,
-            });
+            };
+            if (
+              continues ||
+              items.length >= input.limit ||
+              rawCount < requestedRows ||
+              requestedRows >= fallbackMaxRows
+            ) {
+              return Effect.succeed(batch);
+            }
+            const widen = read(false, Math.min(requestedRows * 2, fallbackMaxRows));
+            // Widening re-reads the repository from its newest row, up to a thousand of them. A
+            // repository the index does cover already answered with its empty search, so before
+            // the first widening the index is asked whether it knows the repository at all.
+            if (requestedRows !== input.limit + 1) return widen;
+            return searchIndexes.pipe(
+              Effect.flatMap((indexed) =>
+                indexed ? Effect.succeed({ ...batch, truncated: false }) : widen,
+              ),
+            );
           }),
         );
       // GitHub does not index every repository for search, and one it will not search answers
