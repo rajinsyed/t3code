@@ -35,9 +35,6 @@
     color-mix(in srgb, var(--glass-pane) calc(var(--glass-opacity) * 0.45), transparent);
   --glass-pane-edge: rgb(255 255 255 / 10%);
   --glass-pane-rim: inset 0 1px rgb(255 255 255 / 14%), inset 0 -1px rgb(255 255 255 / 4%);
-  /* Lightens docked panes whatever is behind the window; a gray fill would
-     dull the brighter parts of the glass instead. */
-  --glass-lift: rgb(255 255 255 / 6%);
   /* Fields and wells inside a pane. */
   --glass-pane-inset: rgb(0 0 0 / 24%);
   --glass-sidebar-inset: 6px;
@@ -143,7 +140,8 @@
   --card: transparent;
   --sidebar: transparent;
   --sidebar-stage-fade: transparent;
-  --glass-sidebar-fill: var(--glass-pane-sheen), var(--glass-lift);
+  --glass-sidebar-fill:
+    var(--glass-pane-sheen), color-mix(in srgb, var(--glass-pane) 34%, transparent);
   border-color: transparent;
 }
 
@@ -160,7 +158,8 @@
     background: var(--glass-sidebar-fill);
     box-shadow:
       var(--glass-pane-rim),
-      inset 0 0 0 1px var(--glass-pane-edge);
+      inset 0 0 0 1px var(--glass-pane-edge),
+      0 12px 32px -16px rgb(0 0 0 / 70%);
     pointer-events: none;
   }
 }
@@ -406,7 +405,7 @@
 /* Side panels are docked glass panes. */
 :root.dark[data-liquid-glass] [data-preview-panel-mode="inline"] {
   border-color: var(--glass-pane-edge);
-  background: rgb(255 255 255 / 3%);
+  background: color-mix(in srgb, var(--glass-pane) 20%, transparent);
   box-shadow: inset 1px 0 rgb(255 255 255 / 5%);
 }
 
@@ -420,7 +419,7 @@
 }
 
 :root.dark[data-liquid-glass] .bg-card\/40.rounded-xl {
-  background: var(--glass-pane-sheen), rgb(255 255 255 / 4%);
+  background: var(--glass-pane-sheen), color-mix(in srgb, var(--glass-pane) 26%, transparent);
   border-color: var(--glass-pane-edge);
   box-shadow: var(--glass-pane-rim);
 }
