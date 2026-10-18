@@ -77,7 +77,9 @@ function parseRemoteFetchUrls(stdout: string): Map<string, string> {
 function pickPrimaryRemote(
   remotes: ReadonlyMap<string, string>,
 ): { readonly remoteName: string; readonly remoteUrl: string } | null {
-  for (const preferredRemoteName of ["upstream", "origin"] as const) {
+  // A checkout is identified by the repository it pushes to. An `upstream` remote names where a
+  // fork came from, which owns none of this checkout's pull requests unless they are sent there.
+  for (const preferredRemoteName of ["origin", "upstream"] as const) {
     const remoteUrl = remotes.get(preferredRemoteName);
     if (remoteUrl) {
       return { remoteName: preferredRemoteName, remoteUrl };
