@@ -110,6 +110,9 @@ export const LiquidGlassTint = Schema.Int.check(
 );
 export type LiquidGlassTint = typeof LiquidGlassTint.Type;
 const DEFAULT_LIQUID_GLASS_TINT: LiquidGlassTint = 70;
+// AppKit's two Liquid Glass materials; clear is the more see-through one.
+export const LiquidGlassStyle = Schema.Literals(["clear", "regular"]);
+export type LiquidGlassStyle = typeof LiquidGlassStyle.Type;
 
 export const MIN_APPEARANCE_CONTRAST = 50;
 export const MAX_APPEARANCE_CONTRAST = 200;
@@ -376,6 +379,9 @@ export const ClientSettingsSchema = Schema.Struct({
   ),
   liquidGlassTint: LiquidGlassTint.pipe(
     Schema.withDecodingDefault(Effect.succeed(DEFAULT_LIQUID_GLASS_TINT)),
+  ),
+  liquidGlassStyle: LiquidGlassStyle.pipe(
+    Schema.withDecodingDefault(Effect.succeed("clear" as const)),
   ),
   fontSizeInterface: InterfaceFontSize.pipe(
     Schema.withDecodingDefault(Effect.succeed(DEFAULT_INTERFACE_FONT_SIZE)),
@@ -1562,6 +1568,7 @@ export const ClientSettingsPatch = Schema.Struct({
   environmentIdentificationMode: Schema.optionalKey(EnvironmentIdentificationMode),
   glassOpacity: Schema.optionalKey(GlassOpacity),
   liquidGlassTint: Schema.optionalKey(LiquidGlassTint),
+  liquidGlassStyle: Schema.optionalKey(LiquidGlassStyle),
   onboardingCompletedAt: Schema.optionalKey(Schema.NullOr(Schema.String)),
   fontSizeInterface: Schema.optionalKey(InterfaceFontSize),
   fontSizePrompt: Schema.optionalKey(PromptFontSize),

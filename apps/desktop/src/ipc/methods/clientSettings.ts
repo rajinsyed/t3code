@@ -28,6 +28,6 @@ export const setClientSettings = DesktopIpc.makeIpcMethod({
     const snapShot = yield* DesktopSnapShot.DesktopSnapShot;
     yield* clientSettings.set(settings);
     yield* snapShot.configure(settings);
-    yield* Effect.sync(() => MacLiquidGlass.setMacLiquidGlassTint(settings.liquidGlassTint));
+    yield* Effect.sync(() => MacLiquidGlass.configureMacLiquidGlass(settings));
   }),
 });

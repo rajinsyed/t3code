@@ -29,6 +29,7 @@ import {
   type ChatWidth,
   type DiffLayout,
   type EnvironmentIdentificationMode,
+  type LiquidGlassStyle,
   MAX_APPEARANCE_CONTRAST,
   MAX_CODE_FONT_SIZE,
   MAX_GLASS_OPACITY,
@@ -204,6 +205,11 @@ const TIMESTAMP_FORMAT_LABELS = {
   "12-hour": "12-hour",
   "24-hour": "24-hour",
 } as const;
+
+const LIQUID_GLASS_STYLE_LABELS: Record<LiquidGlassStyle, string> = {
+  clear: "Clear",
+  regular: "Regular",
+};
 
 const CHAT_WIDTH_LABELS: Record<ChatWidth, string> = {
   comfortable: "Comfortable",
@@ -541,6 +547,9 @@ export function useSettingsRestore(onRestored?: () => void) {
       ? ["Contrast"]
       : []),
     ...(settings.glassOpacity !== DEFAULT_UNIFIED_SETTINGS.glassOpacity ? ["Glass opacity"] : []),
+    ...(settings.liquidGlassStyle !== DEFAULT_UNIFIED_SETTINGS.liquidGlassStyle
+      ? ["Liquid Glass style"]
+      : []),
     ...(settings.liquidGlassTint !== DEFAULT_UNIFIED_SETTINGS.liquidGlassTint
       ? ["Liquid Glass tint"]
       : []),
@@ -739,6 +748,7 @@ export function useSettingsRestore(onRestored?: () => void) {
       contextWindowMeterEnabled: DEFAULT_UNIFIED_SETTINGS.contextWindowMeterEnabled,
       environmentIdentificationMode: DEFAULT_UNIFIED_SETTINGS.environmentIdentificationMode,
       glassOpacity: DEFAULT_UNIFIED_SETTINGS.glassOpacity,
+      liquidGlassStyle: DEFAULT_UNIFIED_SETTINGS.liquidGlassStyle,
       liquidGlassTint: DEFAULT_UNIFIED_SETTINGS.liquidGlassTint,
       panelAnimationDurationMs: DEFAULT_UNIFIED_SETTINGS.panelAnimationDurationMs,
       sidebarThreadPreviewCount: DEFAULT_UNIFIED_SETTINGS.sidebarThreadPreviewCount,
@@ -1231,6 +1241,48 @@ export function AppearanceSettingsPanel() {
             </div>
           }
         />
+
+        {hasLiquidGlassWindow() ? (
+          <SettingsRow
+            {...searchableSetting("liquid-glass-style")}
+            description="Clear shows more of what is behind the window; Regular frosts it more."
+            resetAction={
+              settings.liquidGlassStyle !== DEFAULT_UNIFIED_SETTINGS.liquidGlassStyle ? (
+                <SettingResetButton
+                  label="Liquid Glass style"
+                  onClick={() =>
+                    updateSettings({ liquidGlassStyle: DEFAULT_UNIFIED_SETTINGS.liquidGlassStyle })
+                  }
+                />
+              ) : null
+            }
+            control={
+              <div className="w-full sm:w-40">
+                <Select
+                  value={settings.liquidGlassStyle}
+                  onValueChange={(value) => {
+                    if (value === "clear" || value === "regular")
+                      updateSettings({ liquidGlassStyle: value });
+                  }}
+                >
+                  <SelectTrigger
+                    size="sm"
+                    className="w-full min-w-0"
+                    aria-label="Liquid Glass style"
+                  >
+                    <SelectValue>
+                      {LIQUID_GLASS_STYLE_LABELS[settings.liquidGlassStyle]}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectPopup align="end" alignItemWithTrigger={false}>
+                    <SelectItem value="clear">Clear (default)</SelectItem>
+                    <SelectItem value="regular">Regular</SelectItem>
+                  </SelectPopup>
+                </Select>
+              </div>
+            }
+          />
+        ) : null}
 
         {hasLiquidGlassWindow() ? (
           <SettingsRow

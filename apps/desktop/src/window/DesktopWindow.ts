@@ -406,11 +406,8 @@ export const make = Effect.gen(function* () {
       const savedClientSettings = yield* clientSettings.get.pipe(
         Effect.orElseSucceed(() => Option.none()),
       );
-      MacLiquidGlass.setMacLiquidGlassTint(
-        Option.match(savedClientSettings, {
-          onNone: () => DEFAULT_CLIENT_SETTINGS.liquidGlassTint,
-          onSome: (settings) => settings.liquidGlassTint,
-        }),
+      MacLiquidGlass.configureMacLiquidGlass(
+        Option.getOrElse(savedClientSettings, () => DEFAULT_CLIENT_SETTINGS),
       );
       const liquidGlass = yield* Effect.promise(() => MacLiquidGlass.applyMacLiquidGlass(window));
       if (liquidGlass.material !== "glass") {

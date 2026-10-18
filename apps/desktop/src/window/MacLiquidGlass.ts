@@ -1,3 +1,4 @@
+import { type ClientSettings, DEFAULT_CLIENT_SETTINGS } from "@t3tools/contracts";
 import type * as Electron from "electron";
 
 // Electron has no Liquid Glass option, so the main window is made transparent and
@@ -8,7 +9,7 @@ const FOUNDATION_PATH = "/System/Library/Frameworks/Foundation.framework/Foundat
 const NS_VIEW_WIDTH_SIZABLE = 2;
 const NS_VIEW_HEIGHT_SIZABLE = 16;
 const NS_WINDOW_BELOW = -1;
-const NS_GLASS_EFFECT_VIEW_STYLE_REGULAR = 0;
+const NS_GLASS_EFFECT_VIEW_STYLES = { regular: 0, clear: 1 } as const;
 const NS_BOX_CUSTOM = 4;
 const NS_NO_TITLE = 0;
 
@@ -59,28 +60,39 @@ interface Foundation {
   readonly NSString: { stringWithUTF8String$(value: string): NSObject };
 }
 
+type MacLiquidGlassSettings = Pick<ClientSettings, "liquidGlassStyle" | "liquidGlassTint">;
+interface GlassLayers {
+  readonly glass: NSGlassEffectView;
+  readonly tint: NSBox;
+}
+
 const liquidGlassWindows = new WeakSet<Electron.BrowserWindow>();
-const tintLayers = new Set<NSBox>();
+const glassLayers = new Set<GlassLayers>();
 let appKit: AppKit | undefined;
-let tintPercent = 70;
+let settings: MacLiquidGlassSettings = DEFAULT_CLIENT_SETTINGS;
 
 export function isMacLiquidGlassWindow(window: Electron.BrowserWindow): boolean {
   return liquidGlassWindows.has(window);
 }
 
-function tintColor(kit: AppKit): NSObject {
-  return kit.NSColor.colorWithSRGBRed$green$blue$alpha$(0, 0, 0, tintPercent / 100);
+function applySettings(kit: AppKit, layers: GlassLayers): void {
+  layers.glass.setStyle$(NS_GLASS_EFFECT_VIEW_STYLES[settings.liquidGlassStyle]);
+  layers.tint.setFillColor$(
+    kit.NSColor.colorWithSRGBRed$green$blue$alpha$(0, 0, 0, settings.liquidGlassTint / 100),
+  );
 }
 
-// Changes the black tint over every glass window, e.g. from the client setting.
-export function setMacLiquidGlassTint(percent: number): void {
-  tintPercent = percent;
+// Restyles every glass window, e.g. when the client settings change.
+export function configureMacLiquidGlass(next: MacLiquidGlassSettings): void {
+  settings = next;
   if (!appKit) return;
-  const color = tintColor(appKit);
-  for (const layer of tintLayers) layer.setFillColor$(color);
+  for (const layers of glassLayers) applySettings(appKit, layers);
 }
 
-function insertGlassView(objc: typeof import("objc-js"), window: Electron.BrowserWindow): NSBox {
+function insertGlassView(
+  objc: typeof import("objc-js"),
+  window: Electron.BrowserWindow,
+): GlassLayers {
   const kit = (appKit ??= new objc.NobjcLibrary(APPKIT_PATH) as unknown as AppKit);
   const foundation = new objc.NobjcLibrary(FOUNDATION_PATH) as unknown as Foundation;
   if (!kit.NSGlassEffectView) throw new Error("NSGlassEffectView requires macOS 26.");
@@ -90,7 +102,6 @@ function insertGlassView(objc: typeof import("objc-js"), window: Electron.Browse
   const contentView = objc.fromPointer(window.getNativeWindowHandle()) as unknown as NSView;
   const glassView = kit.NSGlassEffectView.alloc().initWithFrame$(contentView.bounds());
   glassView.setAutoresizingMask$(NS_VIEW_WIDTH_SIZABLE | NS_VIEW_HEIGHT_SIZABLE);
-  glassView.setStyle$(NS_GLASS_EFFECT_VIEW_STYLE_REGULAR);
   // Pinned dark so the glass stays black-tinted whatever the app theme is.
   glassView.setAppearance$(
     kit.NSAppearance.appearanceNamed$(
@@ -105,10 +116,11 @@ function insertGlassView(objc: typeof import("objc-js"), window: Electron.Browse
   tint.setTitlePosition$(NS_NO_TITLE);
   tint.setContentViewMargins$({ width: 0, height: 0 });
   tint.setAutoresizingMask$(NS_VIEW_WIDTH_SIZABLE | NS_VIEW_HEIGHT_SIZABLE);
-  tint.setFillColor$(tintColor(kit));
   glassView.setContentView$(tint);
+  const layers = { glass: glassView, tint };
+  applySettings(kit, layers);
   contentView.addSubview$positioned$relativeTo$(glassView, NS_WINDOW_BELOW, null);
-  return tint;
+  return layers;
 }
 
 export async function applyMacLiquidGlass(
@@ -118,9 +130,9 @@ export async function applyMacLiquidGlass(
   try {
     const objc = await import("objc-js");
     if (window.isDestroyed()) return { material: "none", cause: "window destroyed" };
-    const tint = insertGlassView(objc, window);
-    tintLayers.add(tint);
-    window.once("closed", () => tintLayers.delete(tint));
+    const layers = insertGlassView(objc, window);
+    glassLayers.add(layers);
+    window.once("closed", () => glassLayers.delete(layers));
     window.invalidateShadow();
     return { material: "glass" };
   } catch (cause) {
