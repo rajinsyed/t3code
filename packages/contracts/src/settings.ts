@@ -110,7 +110,7 @@ export const LiquidGlassTint = Schema.Int.check(
 );
 export type LiquidGlassTint = typeof LiquidGlassTint.Type;
 const DEFAULT_LIQUID_GLASS_TINT: LiquidGlassTint = 70;
-// AppKit's two Liquid Glass materials; clear is the more see-through one.
+// AppKit's two Liquid Glass materials; clear is the lighter, more see-through one.
 export const LiquidGlassStyle = Schema.Literals(["clear", "regular"]);
 export type LiquidGlassStyle = typeof LiquidGlassStyle.Type;
 
@@ -381,7 +381,7 @@ export const ClientSettingsSchema = Schema.Struct({
     Schema.withDecodingDefault(Effect.succeed(DEFAULT_LIQUID_GLASS_TINT)),
   ),
   liquidGlassStyle: LiquidGlassStyle.pipe(
-    Schema.withDecodingDefault(Effect.succeed("clear" as const)),
+    Schema.withDecodingDefault(Effect.succeed("regular" as const)),
   ),
   fontSizeInterface: InterfaceFontSize.pipe(
     Schema.withDecodingDefault(Effect.succeed(DEFAULT_INTERFACE_FONT_SIZE)),

@@ -207,8 +207,8 @@ const TIMESTAMP_FORMAT_LABELS = {
 } as const;
 
 const LIQUID_GLASS_STYLE_LABELS: Record<LiquidGlassStyle, string> = {
-  clear: "Clear",
   regular: "Regular",
+  clear: "Clear",
 };
 
 const CHAT_WIDTH_LABELS: Record<ChatWidth, string> = {
@@ -1245,7 +1245,7 @@ export function AppearanceSettingsPanel() {
         {hasLiquidGlassWindow() ? (
           <SettingsRow
             {...searchableSetting("liquid-glass-style")}
-            description="Clear shows more of what is behind the window; Regular frosts it more."
+            description="The glass material behind the window. Clear is lighter and more see-through."
             resetAction={
               settings.liquidGlassStyle !== DEFAULT_UNIFIED_SETTINGS.liquidGlassStyle ? (
                 <SettingResetButton
@@ -1275,8 +1275,8 @@ export function AppearanceSettingsPanel() {
                     </SelectValue>
                   </SelectTrigger>
                   <SelectPopup align="end" alignItemWithTrigger={false}>
-                    <SelectItem value="clear">Clear (default)</SelectItem>
-                    <SelectItem value="regular">Regular</SelectItem>
+                    <SelectItem value="regular">Regular (default)</SelectItem>
+                    <SelectItem value="clear">Clear</SelectItem>
                   </SelectPopup>
                 </Select>
               </div>

@@ -292,7 +292,6 @@ function ContrastAppearanceSync() {
 
 function GlassAppearanceSync() {
   const glassOpacity = useClientSettings((settings) => settings.glassOpacity);
-  const liquidGlassTint = useClientSettings((settings) => settings.liquidGlassTint);
 
   useEffect(() => {
     const style = document.documentElement.style;
@@ -303,11 +302,6 @@ function GlassAppearanceSync() {
       style.removeProperty("--glass-blur");
     }
   }, [glassOpacity]);
-
-  // Frosted panes match their plate to the native glass (liquid-glass.css).
-  useEffect(() => {
-    document.documentElement.style.setProperty("--liquid-glass-tint", `${liquidGlassTint}%`);
-  }, [liquidGlassTint]);
 
   return null;
 }

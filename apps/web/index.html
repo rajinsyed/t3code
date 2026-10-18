@@ -491,58 +491,6 @@
     <title>T3 Code (Beta)</title>
   </head>
   <body>
-    <!-- Liquid Glass frost (src/liquid-glass.css). Chromium draws a backdrop filter over the
-         unfiltered backdrop, and in a transparent window a plain blur leaves that showing. These
-         filters lay the blurred content on a glass-colored plate wherever there is content, so it
-         is hidden, and stay clear to the native glass where there is none. The frost also caps
-         brightness so light content behind a menu cannot wash out its text. -->
-    <svg aria-hidden="true" width="0" height="0" style="position: absolute">
-      <filter
-        id="t3-liquid-glass-frost"
-        x="0"
-        y="0"
-        width="100%"
-        height="100%"
-        color-interpolation-filters="sRGB"
-      >
-        <feGaussianBlur stdDeviation="14" edgeMode="duplicate" result="blur" />
-        <!-- The plate follows a tighter blur so it still covers sparse text, like line ends. -->
-        <feGaussianBlur in="SourceGraphic" stdDeviation="4" edgeMode="duplicate" />
-        <feColorMatrix
-          type="matrix"
-          values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 48 0"
-          result="cover"
-        />
-        <feFlood class="t3-liquid-glass-plate" />
-        <feComposite in2="cover" operator="in" />
-        <feComposite in="blur" operator="over" />
-        <feColorMatrix type="saturate" values="1.6" />
-        <feComponentTransfer>
-          <feFuncR type="table" tableValues="0 0.22 0.29 0.32 0.34" />
-          <feFuncG type="table" tableValues="0 0.22 0.29 0.32 0.34" />
-          <feFuncB type="table" tableValues="0 0.22 0.29 0.32 0.34" />
-        </feComponentTransfer>
-      </filter>
-      <filter
-        id="t3-liquid-glass-scrim"
-        x="0"
-        y="0"
-        width="100%"
-        height="100%"
-        color-interpolation-filters="sRGB"
-      >
-        <feGaussianBlur stdDeviation="5" edgeMode="duplicate" result="blur" />
-        <feColorMatrix
-          in="blur"
-          type="matrix"
-          values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 48 0"
-          result="cover"
-        />
-        <feFlood class="t3-liquid-glass-plate" />
-        <feComposite in2="cover" operator="in" />
-        <feComposite in="blur" operator="over" />
-      </filter>
-    </svg>
     <div id="root">
       <div id="boot-shell">
         <div id="boot-shell-card" aria-label="T3 Code splash screen">
