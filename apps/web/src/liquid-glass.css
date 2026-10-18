@@ -46,14 +46,14 @@
 
 /* Chromium skips backdrop-filter over a transparent window, so frosted
    surfaces cannot blur what is behind them. The Glass opacity setting maps into
-   a dense range instead (40% -> 94%, 100% -> solid). */
+   a dense range instead (40% -> 97%, 100% -> solid). */
 :root.dark[data-liquid-glass] body {
-  --glass-opacity: calc(90% + var(--glass-opacity-setting) * 0.1);
+  --glass-opacity: calc(95% + var(--glass-opacity-setting) * 0.05);
 }
 
 /* Menus and popovers have no dimming backdrop under them. */
 :root.dark[data-liquid-glass] :is(.dropdown-glass, [data-slot="popover-popup"]) {
-  --glass-opacity: calc(96% + var(--glass-opacity-setting) * 0.04);
+  --glass-opacity: calc(97% + var(--glass-opacity-setting) * 0.03);
 }
 
 /* Beats the inline colors from the index.html boot script and syncBrowserChromeTheme. */
@@ -169,6 +169,13 @@
   --background: var(--glass-solid);
 }
 
+/* Load-failure pages replace the hidden browser surface, so they sit on the glass. */
+:root.dark[data-liquid-glass]
+  [data-preview-panel-mode]
+  :is(.absolute, .fixed).inset-0.z-10.bg-background {
+  --background: transparent;
+}
+
 /* The floating browser player paints its card from --muted. */
 :root.dark[data-liquid-glass] [data-preview-mini-player] {
   --background: var(--glass-solid);
@@ -272,10 +279,10 @@
   background-color: rgb(0 0 0 / 24%);
 }
 
-/* The Changes panel's code tint starts right under its toolbar. */
+/* Panel code tints start right under their toolbars. */
 :root.dark[data-liquid-glass]
   [data-preview-panel-mode]
-  .diff-render-surface:not([class~="@container"]) {
+  :is(.diff-render-surface:not([class~="@container"]), .file-preview-virtualizer) {
   box-shadow: inset 0 1px var(--border);
 }
 
