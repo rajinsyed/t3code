@@ -2,6 +2,7 @@ import { HTML_RENDER_DEFAULT_FONTS, htmlRenderTheme } from "@t3tools/shared/html
 import { useSyncExternalStore } from "react";
 
 import { appearanceFontStack } from "../appearanceFonts";
+import { withLiquidGlassHtmlColors } from "../lib/liquidGlass";
 import {
   getStandardThemeColors,
   getThemeColorsForMode,
@@ -39,7 +40,10 @@ export function useHtmlRenderTheme() {
   const mono = useClientSettings((settings) => settings.fontFamilyCode);
   return htmlRenderTheme(
     Object.fromEntries(
-      Object.entries(colors).map(([role, color]) => [role, themeColorToHex(color) ?? color]),
+      Object.entries(withLiquidGlassHtmlColors(colors, resolvedTheme)).map(([role, color]) => [
+        role,
+        themeColorToHex(color) ?? color,
+      ]),
     ) as typeof colors,
     resolvedTheme,
     {

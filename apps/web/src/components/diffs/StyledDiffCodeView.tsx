@@ -87,7 +87,8 @@ export const DIFF_VIEW_UNSAFE_CSS = `${DIFF_SURFACE_THEME_UNSAFE_CSS}
   position: sticky !important;
   top: 0;
   z-index: 4;
-  background-color: var(--code-background) !important;
+  /* Set where the code surface is see-through so scrolled lines stay hidden. */
+  background-color: var(--diffs-sticky-header-background, var(--code-background)) !important;
   border-bottom-color: transparent !important;
   align-items: center !important;
   font-family: var(--font-sans) !important;
@@ -101,7 +102,7 @@ export const DIFF_VIEW_UNSAFE_CSS = `${DIFF_SURFACE_THEME_UNSAFE_CSS}
 [data-diffs-header]:hover {
   /* A native scrollbar gutter cannot be painted by descendants. Use an inset edge cue instead
      of a full-width band that would look accidentally clipped at the gutter. */
-  background-color: var(--code-background) !important;
+  background-color: var(--diffs-sticky-header-background, var(--code-background)) !important;
   box-shadow: inset 3px 0 color-mix(in srgb, var(--code-foreground) 24%, transparent);
 }
 

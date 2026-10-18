@@ -7,6 +7,7 @@ import type { EnvironmentConnectionPhase } from "@t3tools/client-runtime/connect
 import { sourceControlClients } from "@t3tools/client-runtime/source-control-clients";
 import { DEFAULT_KEYBINDINGS } from "@t3tools/shared/keybindings";
 import { commandLabel } from "./KeybindingsSettings.logic";
+import { LIQUID_GLASS_SEARCH_ITEMS } from "./liquidGlassSettingsSearch";
 import {
   validateSettingsScopeSearch,
   type ResolvedSettingsScope,
@@ -226,6 +227,7 @@ export const SETTINGS_SEARCH_ITEMS = [
     to: "/settings/appearance",
     searchTerms: ["transparent transparency solid menus dialogs composer"],
   },
+  ...LIQUID_GLASS_SEARCH_ITEMS,
   {
     id: "diff-color-scheme",
     title: "Diff colors",
