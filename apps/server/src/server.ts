@@ -194,6 +194,14 @@ const HTTP_ROUTER_CONFIG = {
 // T3's primary transport is long-lived WebSocket RPC, whose Effect scope finalizer
 // already closes the websocket gracefully.
 const HTTP_PREEMPTIVE_SHUTDOWN_GRACE_MS = 0;
+// The HTTP server, and with it the T3 home lock, is released only once every
+// socket ends. ws keeps a closed socket open for 30s by default waiting for the
+// peer's close frame, so one sleeping phone would hold the lock that long.
+// Kept off the object literal because @types/ws predates `closeTimeout`.
+// Context takeover stays enabled (ws default) so the compression window is
+// shared across frames, which also makes small frames cheap to compress, so no
+// size threshold is set (ws only honors `threshold` without context takeover).
+const WEBSOCKET_SERVER_OPTIONS = { perMessageDeflate: true, closeTimeout: 1_000 };
 const layerResourceAttribution = ResourceAttribution.layer;
 const layerApplicationObservability = EventLoopMonitor.layer.pipe(
   Layer.provideMerge(Observability.layer),
@@ -290,11 +298,7 @@ const layerHttpServer = Layer.unwrap(
       host: config.host ?? "127.0.0.1",
       port: config.port,
       gracefulShutdownTimeout: HTTP_PREEMPTIVE_SHUTDOWN_GRACE_MS,
-      // Context takeover stays enabled (ws default) so the compression
-      // window is shared across frames — that also makes small frames cheap
-      // to compress, so no size threshold is set (ws only honors
-      // `threshold` when context takeover is disabled).
-      websocket: { perMessageDeflate: true },
+      websocket: WEBSOCKET_SERVER_OPTIONS,
     });
   }),
 );
