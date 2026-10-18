@@ -506,10 +506,11 @@
         color-interpolation-filters="sRGB"
       >
         <feGaussianBlur stdDeviation="14" edgeMode="duplicate" result="blur" />
+        <!-- The plate follows a tighter blur so it still covers sparse text, like line ends. -->
+        <feGaussianBlur in="SourceGraphic" stdDeviation="4" edgeMode="duplicate" />
         <feColorMatrix
-          in="blur"
           type="matrix"
-          values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 24 0"
+          values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 48 0"
           result="cover"
         />
         <feFlood class="t3-liquid-glass-plate" />
@@ -534,7 +535,7 @@
         <feColorMatrix
           in="blur"
           type="matrix"
-          values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 24 0"
+          values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 48 0"
           result="cover"
         />
         <feFlood class="t3-liquid-glass-plate" />
