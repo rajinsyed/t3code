@@ -40,6 +40,13 @@ const DEFAULT_BACKEND_READINESS_REQUEST_TIMEOUT = Duration.seconds(1);
 // Same as the service launcher. A killed backend leaves its agents running,
 // and a busy one needs a few seconds to stop every provider session.
 const DEFAULT_BACKEND_TERMINATE_GRACE = Duration.seconds(5);
+// Stopping SIGKILLs the backend after the grace, then waits up to a second for
+// it to exit. A caller that gives up sooner and quits leaves the backend
+// running, still holding the T3 home lock the next launch needs.
+export const BACKEND_STOP_TIMEOUT = Duration.sum(
+  DEFAULT_BACKEND_TERMINATE_GRACE,
+  Duration.seconds(2),
+);
 const DEFAULT_BACKEND_OUTPUT_DRAIN_TIMEOUT = Duration.seconds(5);
 const BACKEND_READINESS_PATH = "/.well-known/t3/environment";
 const { logWarning: logBackendProcessWarning } =

@@ -1572,7 +1572,7 @@ describe("DesktopBackendManager", () => {
         const started = yield* Queue.takeN(teardownStarted, 2);
         assert.deepEqual(started.toSorted(), ["instance1", "instance2"]);
 
-        yield* TestClock.adjust(Duration.seconds(5));
+        yield* TestClock.adjust(DesktopBackendManager.BACKEND_STOP_TIMEOUT);
         yield* Fiber.join(quitFiber);
         assert.equal(yield* Queue.size(teardownFinished), 0);
 
