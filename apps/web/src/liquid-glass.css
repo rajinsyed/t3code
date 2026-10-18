@@ -5,8 +5,8 @@
  * keeps a real fill. Light mode and every other client keep the opaque canvas.
  * `data-liquid-glass` is set by the boot script in index.html.
  *
- * Do not give `--background` a partial alpha: structural layers stack several
- * deep, so the tint would compound unevenly. Tint single surfaces instead.
+ * Do not give the canvas `--background` a partial alpha: structural layers stack
+ * several deep, so the tint would compound unevenly. Tint single surfaces instead.
  */
 :root.dark[data-liquid-glass] {
   --background: transparent;
@@ -20,11 +20,23 @@
   --glass-scrim: rgb(0 0 0);
   /* Bars that content scrolls under. */
   --glass-frost: rgb(16 16 19 / 55%);
-  /* Chromium skips backdrop-filter: blur() over a transparent window, so frosted
-     surfaces use the SVG filters in index.html, which blur in-app content until it
-     is hidden and leave empty areas clear to the native glass. */
+  /* Chromium cannot blur the backdrop of a transparent window, so frosted surfaces
+     use the SVG filters in index.html. They hide in-app content under a plate that
+     matches the native glass, which darkens with the Liquid Glass tint setting. */
   --glass-frost-filter: url(#t3-liquid-glass-frost);
   --glass-scrim-filter: url(#t3-liquid-glass-scrim);
+  --glass-plate: color-mix(in srgb, black var(--liquid-glass-tint, 70%), rgb(48 50 60));
+  /* Floating panes (menus, popovers, toasts, dialogs, the composer) are a light
+     tint over the frost with a lit rim, thinned or thickened by Glass opacity. */
+  --glass-pane: rgb(40 40 47);
+  --glass-pane-sheen: linear-gradient(rgb(255 255 255 / 5%), transparent 45%);
+  --glass-pane-fill:
+    var(--glass-pane-sheen),
+    color-mix(in srgb, var(--glass-pane) calc(var(--glass-opacity) * 0.45), transparent);
+  --glass-pane-edge: rgb(255 255 255 / 10%);
+  --glass-pane-rim: inset 0 1px rgb(255 255 255 / 14%), inset 0 -1px rgb(255 255 255 / 4%);
+  /* Fields and wells inside a pane. */
+  --glass-pane-inset: rgb(0 0 0 / 24%);
   --code-background: transparent;
   --terminal-background: rgb(11 11 13);
   --surface-grain: none;
@@ -44,7 +56,12 @@
   --glass-dialog: var(--app-theme-canvas);
   --glass-sheet: color-mix(in srgb, var(--app-theme-surface-overlay) 72%, transparent);
   --glass-scrim: var(--app-theme-canvas);
+  --glass-pane: var(--app-theme-surface-overlay);
   --terminal-background: var(--app-theme-terminal-background);
+}
+
+.t3-liquid-glass-plate {
+  flood-color: var(--glass-plate);
 }
 
 /* Frosted surfaces: menus, popovers, toasts, dialogs, the composer and anything
@@ -54,14 +71,42 @@
   backdrop-filter: var(--glass-frost-filter);
 }
 
-:root.dark[data-liquid-glass] [class*="backdrop-blur"],
+:root.dark[data-liquid-glass] [class*="backdrop-blur"]:not(.backdrop-blur-none),
 :root.dark[data-liquid-glass] [class*="backdrop-blur"]::before {
   --tw-backdrop-blur: var(--glass-frost-filter);
 }
 
-/* A rim of light on the top edge, composed with the element's own shadows. */
+/* The rim composes with the element's own shadow utilities. */
+:root.dark[data-liquid-glass] :is(.dropdown-glass, .surface-glass) {
+  background: var(--glass-pane-fill);
+  --tw-inset-shadow: var(--glass-pane-rim);
+}
+
 :root.dark[data-liquid-glass] .dropdown-glass {
-  --tw-inset-shadow: inset 0 1px rgb(255 255 255 / 7%);
+  border-color: var(--glass-pane-edge);
+}
+
+/* Dialogs hold more text, so they sit a little denser over the scrim. */
+:root.dark[data-liquid-glass] .dialog-glass {
+  background:
+    var(--glass-pane-sheen),
+    color-mix(in srgb, var(--glass-pane) calc(var(--glass-opacity) * 0.55), transparent);
+  border-color: var(--glass-pane-edge);
+  box-shadow:
+    var(--glass-pane-rim),
+    0 24px 72px -20px rgb(0 0 0 / 90%);
+}
+
+/* alert-glass paints from --background with !important, which unlayered rules
+   cannot outrank, so the pane color goes in through the variable. */
+:root.dark[data-liquid-glass] .alert-glass {
+  --background: color-mix(in srgb, var(--glass-pane) 55%, transparent);
+}
+
+:root.dark[data-liquid-glass] [data-slot="composer-shell"] {
+  --chat-composer-glass-surface: color-mix(in srgb, var(--glass-pane) 50%, transparent);
+  --chat-composer-outline: var(--glass-pane-edge);
+  --chat-composer-highlight: rgb(255 255 255 / 10%);
 }
 
 /* Modal backdrops soften the app behind them instead of hiding it. */
@@ -135,13 +180,10 @@
   backdrop-filter: var(--glass-frost-filter);
 }
 
-/* Floating layers give nested `bg-background` parts a real color, as dialogs do. */
-:root.dark[data-liquid-glass] :is(.dialog-glass, .surface-glass, .alert-glass) {
-  --background: var(--glass-dialog);
-}
-
-:root.dark[data-liquid-glass] :is(.dropdown-glass, [data-slot="popover-popup"]) {
-  --background: var(--glass-solid);
+/* Nested `bg-background` parts, such as inputs, read as wells in the pane. */
+:root.dark[data-liquid-glass]
+  :is(.dialog-glass, .surface-glass, .dropdown-glass, [data-slot="popover-popup"]) {
+  --background: var(--glass-pane-inset);
 }
 
 :root.dark[data-liquid-glass] :is(.dialog-backdrop, [data-slot="sheet-backdrop"]) {
